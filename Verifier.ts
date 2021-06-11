@@ -49,14 +49,9 @@ export class Verifier<T extends Payload> extends Actor<Verifier<T>> {
 				result = result && this.verifyAudience(result.aud, audience) ? result : undefined
 				if (result) {
 					const now = Math.floor(Date.now() / 1000)
-					if (result?.iat && result.iat > 1000000000000)
-						result.iat = Math.floor(result.iat / 1000)
-					if (result?.exp && result.exp > 1000000000000)
-						result.exp = Math.floor(result.exp / 1000)
-					result =
-						(result.exp == undefined || result.exp > now) && (result.iat == undefined || result.iat <= now)
-							? result
-							: undefined
+					const iat = result?.iat && result.iat > 1000000000000 ? Math.floor(result.iat / 1000) : result.iat
+					const exp = result?.exp && result.exp > 1000000000000 ? Math.floor(result.exp / 1000) : result.exp
+					result = (exp == undefined || exp > now) && (iat == undefined || iat <= now) ? result : undefined
 				}
 				if (result) {
 					result.token = token
@@ -67,8 +62,8 @@ export class Verifier<T extends Payload> extends Actor<Verifier<T>> {
 		return result as T | undefined
 	}
 	private verifyAudience(audience: undefined | string | string[], allowed: string[]): boolean {
+		audience = audience ?? ""
 		return (
-			audience == undefined ||
 			allowed.length == 0 ||
 			(typeof audience == "string" && allowed.some(a => a == audience)) ||
 			(Array.isArray(audience) && audience.some(a => allowed.some(ta => ta == a)))
